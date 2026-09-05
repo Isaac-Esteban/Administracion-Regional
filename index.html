@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard de Asistencia 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1420; --card:#161d2e; --card2:#1c2438; --border:#2a3450;
+    --txt:#e7ecf7; --muted:#93a0bf; --a:#33c17a; --j:#f2b544; --n:#ef5a63;
+    --accent:#5b8def;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:linear-gradient(180deg,#0b0f19,#111828);color:var(--txt);padding:24px;}
+  h1{font-size:22px;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:20px;}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;}
+  .tab{padding:9px 18px;border-radius:10px;background:var(--card);border:1px solid var(--border);cursor:pointer;font-size:14px;color:var(--muted);transition:.15s;}
+  .tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px;}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
+  .kpi .val{font-size:26px;font-weight:700;}
+  .kpi .lbl{color:var(--muted);font-size:12px;margin-top:4px;}
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-bottom:16px;}
+  @media(max-width:900px){.grid{grid-template-columns:1fr;}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;}
+  .card h3{margin:0 0 12px;font-size:14px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+  canvas{max-height:320px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);}
+  th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--card);}
+  tr:hover td{background:var(--card2);}
+  .bar{display:inline-block;height:8px;border-radius:4px;background:var(--border);width:70px;position:relative;overflow:hidden;vertical-align:middle;margin-right:6px;}
+  .bar > span{display:block;height:100%;}
+  .tag{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+  .tag.ok{background:rgba(51,193,122,.15);color:var(--a);}
+  .tag.mid{background:rgba(242,181,68,.15);color:var(--j);}
+  .tag.low{background:rgba(239,90,99,.15);color:var(--n);}
+  .scroll{max-height:420px;overflow:auto;}
+  .legend-row{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-top:8px;flex-wrap:wrap;}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;}
+</style>
+</head>
+<body>
+
+<h1>📋 Dashboard de Asistencia 2026</h1>
+<div class="sub">Datos ENE–AGO 2026 · A = Asiste · J = Justifica · N = No asiste</div>
+
+<div class="tabs">
+  <div class="tab active" data-view="regional">Administración Regional</div>
+  <div class="tab" data-view="ministerio">Ministerio</div>
+</div>
+
+<div id="kpis" class="kpis"></div>
+
+<div class="grid">
+  <div class="card">
+    <h3>Tendencia mensual (asiste / justifica / no asiste)</h3>
+    <canvas id="chartMonthly"></canvas>
+  </div>
+  <div class="card">
+    <h3>Distribución global</h3>
+    <canvas id="chartDonut"></canvas>
+    <div class="legend-row">
+      <span><span class="dot" style="background:var(--a)"></span>Asiste</span>
+      <span><span class="dot" style="background:var(--j)"></span>Justifica</span>
+      <span><span class="dot" style="background:var(--n)"></span>No asiste</span>
+    </div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h3>% de asistencia por persona</h3>
+    <canvas id="chartPeople" style="max-height:420px"></canvas>
+  </div>
+  <div class="card">
+    <h3>Detalle por persona</h3>
+    <div class="scroll">
+      <table id="tablePeople">
+        <thead><tr><th>Nombre</th><th>Cargo</th><th>%</th><th>A</th><th>J</th><th>N</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = {"regional": [{"nombre": "Rolando Tapia", "cargo": "Fiscal", "departamento": "Administracion Regional", "meses": ["a", "a", "j", "a", "a", "a", "j", "j"], "a": 5, "j": 3, "n": 0, "pct": 0.625}, {"nombre": "David Canales", "cargo": "Fiscal", "departamento": "Administracion Regional", "meses": ["n", "n", "n", "n", "n", "n", "n", "n"], "a": 0, "j": 0, "n": 8, "pct": 0.0}, {"nombre": "Isaac Alarcón", "cargo": "Pro-Tesorero", "departamento": "Administracion Regional", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "Samuel Mardones", "cargo": "vicepresidente", "departamento": "Administracion Regional", "meses": ["a", "a", "a", "a", "n", "a", "a", "a"], "a": 7, "j": 0, "n": 1, "pct": 0.875}, {"nombre": "Antonio Fuentes", "cargo": "Tesorero", "departamento": "Administracion Regional", "meses": ["a", "a", "a", "a", "a", "a", "j", "a"], "a": 7, "j": 1, "n": 0, "pct": 0.875}, {"nombre": "Ariel Flores", "cargo": "Secretario", "departamento": "Administracion Regional", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "Luis Esteban Concha", "cargo": "Pro-Secretario", "departamento": "Administracion Regional", "meses": ["a", "a", "n", "n", "n", "n", "a", "n"], "a": 3, "j": 0, "n": 5, "pct": 0.375}], "ministerio": [{"nombre": "Miguel Schorwer", "cargo": "Anciano", "accion": "Chillan", "meses": ["a", "j", "j", "j", "j", "a", "a", "a"], "a": 4, "j": 4, "n": 0, "pct": 0.5}, {"nombre": "David Rodriguez", "cargo": "Anciano", "accion": "Galvarino", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "Pablo Torres", "cargo": "Anciano", "accion": "Los Andes", "meses": ["a", "a", "a", "j", "n", "n", "n", "n"], "a": 3, "j": 1, "n": 4, "pct": 0.375}, {"nombre": "Miguel Caro", "cargo": "Anciano", "accion": "Los Andes", "meses": ["j", "j", "j", "a", "a", "a", "a", "a"], "a": 5, "j": 3, "n": 0, "pct": 0.625}, {"nombre": "Hector Rivas", "cargo": "Anciano", "accion": "Pailahueque", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "Osvaldo Ortega", "cargo": "Anciano", "accion": "San Pedro", "meses": ["a", "a", "j", "a", "n", "a", "n", "a"], "a": 5, "j": 1, "n": 2, "pct": 0.625}, {"nombre": "Exequiel Torres", "cargo": "Anciano", "accion": "San Pedro", "meses": ["a", "a", "a", "n", "n", "a", "a", "a"], "a": 6, "j": 0, "n": 2, "pct": 0.75}, {"nombre": "Moises Schorwer", "cargo": "Anciano", "accion": "Santa Sabina", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "Richard Ortega", "cargo": "Cooperador", "accion": "Bocasur", "meses": ["a", "n", "a", "a", "a", "n", "a", "n"], "a": 5, "j": 0, "n": 3, "pct": 0.625}, {"nombre": "Juan Zuñiga", "cargo": "Cooperador", "accion": "Cerro verde", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "Arnaldo Hidalgo", "cargo": "Cooperador", "accion": "Coronel", "meses": ["a", "j", "j", "j", "n", "a", "a", "n"], "a": 3, "j": 3, "n": 2, "pct": 0.375}, {"nombre": "Samuel Flores", "cargo": "Cooperador", "accion": "Florida", "meses": ["j", "a", "a", "n", "n", "a", "j", "a"], "a": 4, "j": 2, "n": 2, "pct": 0.5}, {"nombre": "Luis Toro", "cargo": "Cooperador", "accion": "Galvarino", "meses": ["j", "a", "a", "a", "n", "n", "a", "a"], "a": 5, "j": 1, "n": 2, "pct": 0.625}, {"nombre": "David Garrido", "cargo": "Cooperador", "accion": "Lautaro", "meses": ["j", "a", "j", "a", "n", "n", "n", "a"], "a": 3, "j": 2, "n": 3, "pct": 0.375}, {"nombre": "Hector Valenzuela", "cargo": "Cooperador", "accion": "Lomas Coloradas", "meses": ["a", "a", "a", "a", "a", "a", "n", "n"], "a": 6, "j": 0, "n": 2, "pct": 0.75}, {"nombre": "Luis Concha", "cargo": "Cooperador", "accion": "Los Andes", "meses": ["n", "a", "a", "n", "a", "n", "a", "a"], "a": 5, "j": 0, "n": 3, "pct": 0.625}, {"nombre": "Julio Caniullan", "cargo": "Cooperador", "accion": "Pulingue", "meses": ["n", "n", "n", "n", "n", "n", "n", "n"], "a": 0, "j": 0, "n": 8, "pct": 0.0}, {"nombre": "Victor Viguera", "cargo": "Cooperador", "accion": "Los Andes", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "Martin Huichaqueo", "cargo": "Cooperador", "accion": "Santa Sabina", "meses": ["j", "a", "a", "a", "a", "a", "a", "a"], "a": 7, "j": 1, "n": 0, "pct": 0.875}, {"nombre": "Gonzalo Isla", "cargo": "Diacono", "accion": "Cerro verde", "meses": ["j", "j", "a", "a", "a", "a", "a", "n"], "a": 5, "j": 2, "n": 1, "pct": 0.625}, {"nombre": "Ricardo Valladares", "cargo": "Diacono", "accion": "Galvarino", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "Marcelo Garrido", "cargo": "Diacono", "accion": "Lautaro", "meses": ["j", "j", "j", "a", "a", "n", "n", "n"], "a": 2, "j": 3, "n": 3, "pct": 0.25}, {"nombre": "Fernando Flores", "cargo": "Diacono", "accion": "Los Andes", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "David Sanhueza", "cargo": "Diacono", "accion": "Los Andes", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "Carlos Baez", "cargo": "Diacono", "accion": "Los Andes", "meses": ["a", "a", "a", "a", "a", "n", "a", "a"], "a": 7, "j": 0, "n": 1, "pct": 0.875}, {"nombre": "Sergio Maldonado", "cargo": "Diacono", "accion": "San Pedro", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "Rolando Tapia", "cargo": "Adm. Regional", "accion": "Fiscal", "meses": ["a", "a", "j", "a", "a", "a", "j", "n"], "a": 5, "j": 2, "n": 1, "pct": 0.625}, {"nombre": "David Canales", "cargo": "Adm. Regional", "accion": "Fiscal", "meses": ["n", "a", "a", "n", "n", "n", "a", "a"], "a": 4, "j": 0, "n": 4, "pct": 0.5}, {"nombre": "Isaac Alarcón", "cargo": "Adm. Regional", "accion": "Pro-Tesorero", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "Samuel Mardones", "cargo": "Adm. Regional", "accion": "Vice-Presidente", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "Antonio Fuentes", "cargo": "Adm. Regional", "accion": "Tesorero", "meses": ["a", "a", "a", "j", "a", "a", "j", "a"], "a": 6, "j": 2, "n": 0, "pct": 0.75}, {"nombre": "Luis Esteban", "cargo": "Adm. Regional", "accion": "Pro-Secretario", "meses": ["a", "n", "n", "n", "n", "a", "a", "a"], "a": 4, "j": 0, "n": 4, "pct": 0.5}, {"nombre": "Ariel Flores", "cargo": "Adm. Regional", "accion": "Secretario", "meses": ["a", "a", "a", "a", "a", "a", "a", "a"], "a": 8, "j": 0, "n": 0, "pct": 1.0}, {"nombre": "Marcelo Villegas", "cargo": "Adm. Nacional", "accion": "Fiscal", "meses": ["a", "a", "a", "a", "a", "a", "n", "n"], "a": 6, "j": 0, "n": 2, "pct": 0.75}, {"nombre": "Pedro Rivas", "cargo": "Adm. Nacional", "accion": "Presidente", "meses": ["a", "a", "a", "a", "a", "a", "n", "a"], "a": 7, "j": 0, "n": 1, "pct": 0.875}, {"nombre": "Ronald Morales", "cargo": "Adm. Nacional", "accion": "Pro-Tesorero", "meses": ["a", "j", "n", "a", "a", "a", "n", "a"], "a": 5, "j": 1, "n": 2, "pct": 0.625}, {"nombre": "Victor Vidal", "cargo": "Adm. Nacional", "accion": "Tesorero", "meses": ["n", "n", "n", "n", "n", "n", "n", "n"], "a": 0, "j": 0, "n": 8, "pct": 0.0}, {"nombre": "Miguel Gutierrez", "cargo": "Adm. Nacional", "accion": "Vice-Presidente", "meses": ["j", "a", "a", "n", "n", "n", "n", "n"], "a": 2, "j": 1, "n": 5, "pct": 0.25}]};
+
+const MESES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO'];
+const COL = { a:'#33c17a', j:'#f2b544', n:'#ef5a63' };
+
+let charts = {};
+let currentView = 'regional';
+
+function destroyCharts(){ Object.values(charts).forEach(c=>c && c.destroy()); charts={}; }
+
+function render(view){
+  currentView = view;
+  const people = DATA[view];
+  const extraLabel = view === 'regional' ? 'Departamento' : 'Acción/Localidad';
+
+  // KPIs
+  const totalA = people.reduce((s,p)=>s+p.a,0);
+  const totalJ = people.reduce((s,p)=>s+p.j,0);
+  const totalN = people.reduce((s,p)=>s+p.n,0);
+  const totalReg = totalA+totalJ+totalN;
+  const avgPct = people.reduce((s,p)=>s+p.pct,0)/people.length;
+  const perfect = people.filter(p=>p.pct===1).length;
+  const critical = people.filter(p=>p.pct<0.5).length;
+
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="val">${people.length}</div><div class="lbl">Personas registradas</div></div>
+    <div class="kpi"><div class="val" style="color:var(--accent)">${(avgPct*100).toFixed(1)}%</div><div class="lbl">Asistencia promedio</div></div>
+    <div class="kpi"><div class="val" style="color:var(--a)">${totalA}</div><div class="lbl">Registros "Asiste" (${((totalA/totalReg)*100).toFixed(0)}%)</div></div>
+    <div class="kpi"><div class="val" style="color:var(--j)">${totalJ}</div><div class="lbl">Registros "Justifica" (${((totalJ/totalReg)*100).toFixed(0)}%)</div></div>
+    <div class="kpi"><div class="val" style="color:var(--n)">${totalN}</div><div class="lbl">Registros "No asiste" (${((totalN/totalReg)*100).toFixed(0)}%)</div></div>
+    <div class="kpi"><div class="val" style="color:var(--a)">${perfect}</div><div class="lbl">Con 100% de asistencia</div></div>
+    <div class="kpi"><div class="val" style="color:var(--n)">${critical}</div><div class="lbl">Bajo 50% (críticos)</div></div>
+  `;
+
+  // Monthly trend
+  const monthlyA = MESES.map((_,i)=>people.filter(p=>p.meses[i]==='a').length);
+  const monthlyJ = MESES.map((_,i)=>people.filter(p=>p.meses[i]==='j').length);
+  const monthlyN = MESES.map((_,i)=>people.filter(p=>p.meses[i]==='n').length);
+
+  destroyCharts();
+  charts.monthly = new Chart(document.getElementById('chartMonthly'), {
+    type:'line',
+    data:{ labels:MESES, datasets:[
+      {label:'Asiste', data:monthlyA, borderColor:COL.a, backgroundColor:COL.a+'33', tension:.3, fill:true},
+      {label:'Justifica', data:monthlyJ, borderColor:COL.j, backgroundColor:COL.j+'33', tension:.3, fill:true},
+      {label:'No asiste', data:monthlyN, borderColor:COL.n, backgroundColor:COL.n+'33', tension:.3, fill:true},
+    ]},
+    options:{
+      plugins:{legend:{labels:{color:'#e7ecf7'}}},
+      scales:{
+        x:{ticks:{color:'#93a0bf'},grid:{color:'#2a3450'}},
+        y:{ticks:{color:'#93a0bf'},grid:{color:'#2a3450'},beginAtZero:true}
+      }
+    }
+  });
+
+  charts.donut = new Chart(document.getElementById('chartDonut'), {
+    type:'doughnut',
+    data:{ labels:['Asiste','Justifica','No asiste'], datasets:[{data:[totalA,totalJ,totalN], backgroundColor:[COL.a,COL.j,COL.n], borderWidth:0}] },
+    options:{ plugins:{legend:{display:false}} }
+  });
+
+  const sorted = [...people].sort((a,b)=>b.pct-a.pct);
+  charts.people = new Chart(document.getElementById('chartPeople'), {
+    type:'bar',
+    data:{
+      labels: sorted.map(p=>p.nombre),
+      datasets:[{
+        label:'% Asistencia',
+        data: sorted.map(p=>(p.pct*100).toFixed(1)),
+        backgroundColor: sorted.map(p=> p.pct>=0.8?COL.a : p.pct>=0.5?COL.j:COL.n)
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{min:0,max:100,ticks:{color:'#93a0bf'},grid:{color:'#2a3450'}},
+        y:{ticks:{color:'#e7ecf7',font:{size:11}},grid:{display:false}}
+      }
+    }
+  });
+
+  // Table
+  const tbody = document.querySelector('#tablePeople tbody');
+  tbody.innerHTML = sorted.map(p=>{
+    const pct = (p.pct*100).toFixed(0);
+    const tagClass = p.pct>=0.8?'ok':p.pct>=0.5?'mid':'low';
+    const barColor = p.pct>=0.8?COL.a:p.pct>=0.5?COL.j:COL.n;
+    return `<tr>
+      <td>${p.nombre}</td>
+      <td style="color:var(--muted)">${p.cargo}</td>
+      <td><span class="bar"><span style="width:${pct}%;background:${barColor}"></span></span><span class="tag ${tagClass}">${pct}%</span></td>
+      <td style="color:var(--a)">${p.a}</td>
+      <td style="color:var(--j)">${p.j}</td>
+      <td style="color:var(--n)">${p.n}</td>
+    </tr>`;
+  }).join('');
+}
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    render(tab.dataset.view);
+  });
+});
+
+render('regional');
+</script>
+</body>
+</html>
