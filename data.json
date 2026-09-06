@@ -14,6 +14,169 @@
     "DIC"
   ],
   "hojas": {
+    "regional": [
+      {
+        "nombre": "Rolando Tapia",
+        "cargo": "Fiscal",
+        "accion": "Administracion Regional",
+        "meses": [
+          "a",
+          "a",
+          "j",
+          "a",
+          "a",
+          "a",
+          "j",
+          "j",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "a": 5,
+        "j": 3,
+        "n": 0,
+        "pct": 0.625
+      },
+      {
+        "nombre": "David Canales",
+        "cargo": "Fiscal",
+        "accion": "Administracion Regional",
+        "meses": [
+          "n",
+          "n",
+          "n",
+          "n",
+          "n",
+          "n",
+          "n",
+          "n",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "a": 0,
+        "j": 0,
+        "n": 8,
+        "pct": 0.0
+      },
+      {
+        "nombre": "Isaac Alarcón",
+        "cargo": "Pro-Tesorero",
+        "accion": "Administracion Regional",
+        "meses": [
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "a": 8,
+        "j": 0,
+        "n": 0,
+        "pct": 1.0
+      },
+      {
+        "nombre": "Samuel Mardones",
+        "cargo": "vicepresidente",
+        "accion": "Administracion Regional",
+        "meses": [
+          "a",
+          "a",
+          "a",
+          "a",
+          "n",
+          "a",
+          "a",
+          "a",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "a": 7,
+        "j": 0,
+        "n": 1,
+        "pct": 0.875
+      },
+      {
+        "nombre": "Antonio Fuentes",
+        "cargo": "Tesorero",
+        "accion": "Administracion Regional",
+        "meses": [
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "j",
+          "a",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "a": 7,
+        "j": 1,
+        "n": 0,
+        "pct": 0.875
+      },
+      {
+        "nombre": "Ariel Flores",
+        "cargo": "Secretario",
+        "accion": "Administracion Regional",
+        "meses": [
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "a",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "a": 8,
+        "j": 0,
+        "n": 0,
+        "pct": 1.0
+      },
+      {
+        "nombre": "Luis Esteban Concha",
+        "cargo": "Pro-Secretario",
+        "accion": "Administracion Regional",
+        "meses": [
+          "a",
+          "a",
+          "n",
+          "n",
+          "n",
+          "n",
+          "a",
+          "n",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "a": 3,
+        "j": 0,
+        "n": 5,
+        "pct": 0.375
+      }
+    ],
     "ministerio": [
       {
         "nombre": "Miguel Schorwer",
