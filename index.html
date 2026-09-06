@@ -43,11 +43,11 @@
 </head>
 <body>
 
-<h1>📋 Dashboard de Asistencia 2026</h1>
-<div class="sub">Datos ENE–AGO 2026 · A = Asiste · J = Justifica · N = No asiste</div>
+<h1>Asistencia Reuniones 2026 - Ministerio ZOna Sur</h1>
+<div class="sub">Reportería Mensual</div>
 
 <div class="tabs">
-  <div class="tab active" data-view="ministerio">Ministerio</div>
+  <div class="tab active" data-view="ministerio">Ministerio Regional</div>
 </div>
 
 <div id="kpis" class="kpis"></div>
@@ -58,7 +58,7 @@
     <canvas id="chartMonthly"></canvas>
   </div>
   <div class="card">
-    <h3>Distribución global</h3>
+    <h3>Distribución general</h3>
     <canvas id="chartDonut"></canvas>
     <div class="legend-row">
       <span><span class="dot" style="background:var(--a)"></span>Asiste</span>
@@ -70,11 +70,11 @@
 
 <div class="grid">
   <div class="card">
-    <h3>% de asistencia por persona</h3>
+    <h3>% de asistencia por Hermano</h3>
     <canvas id="chartPeople" style="max-height:420px"></canvas>
   </div>
   <div class="card">
-    <h3>Detalle por persona</h3>
+    <h3>Detalle por Hermano (Cargo)</h3>
     <div class="scroll">
       <table id="tablePeople">
         <thead><tr><th>Nombre</th><th>Cargo</th><th>%</th><th>A</th><th>J</th><th>N</th></tr></thead>
